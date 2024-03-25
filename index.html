@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<!-- Dali Clock - a melting digital clock written in JavaScript.
+     Copyright (c) 1991-2010 Jamie Zawinski <jwz@jwz.org>
+
+     Permission to use, copy, modify, distribute, and sell this
+     software and its documentation for any purpose is hereby granted
+     without fee, provided that the above copyright notice appear in
+     all copies and that both that copyright notice and this
+     permission notice appear in supporting documentation.  No
+     representations are made about the suitability of this software
+     for any purpose.  It is provided "as is" without express or
+     implied warranty.
+  -->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+ <head>
+  <meta name="geo.position" content="37.771007;-122.412694" />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="robots" content="noai, noimageai" />
+  <link rel="shortcut icon" href="https://cdn.jwz.org/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="/jwz.css" />
+  <link rel="top"   href="/" />
+  <title>Dali Clock: The Javascript version</title>
+  <script ASYNC src="/jwz.js"         type="text/javascript"></script>
+  <script src="prototype.js"	type="text/javascript"></script>
+  <script src="daliclock.js"	type="text/javascript"></script>
+  <script src="fonts.js"	type="text/javascript"></script>
+  <script src="control.js"	type="text/javascript"></script>
+  <style>
+   <!--
+
+    body      { color: #000; background: #FFF; }
+    a:link    { color: #00E; }
+    a:hover   { color: #00E !important; }
+    a:visited { color: #518; }
+    a:active  { color: #F00; }
+    hr { color: #000; background: #000; height: 1px; border:0; }
+
+    #clockbg { width:320px; height:420px; border: 1px solid; }
+
+    #canvas  { position:relative; left:10px; top:10px;
+               width:300px; height:400px; }
+
+    h1 { display: block; background: #DDD; border: 1px solid;
+         font-size: 12pt; font-weight: bold; text-align: center;
+	 margin-bottom:3em; spacing:0; padding:0.5em; }
+
+    h2 { font-size: 12pt; font-weight: bold; text-align: center;
+	 margin-bottom:1em; spacing:0; padding:0; }
+
+    .prefs { padding: 0 1em; margin: 0 0 1em 1em; border: 1px solid;
+             background: #EEE; float: right; text-align: center; }
+    .clockbox { float: left; }
+
+    @media screen and (max-width: 640px) {
+      h1 { margin-bottom: 1em; }
+      .prefs    { float: none; margin: 0 auto 1em auto; width: 294px; }
+      .clockbox { float: none; margin: auto; }
+    }
+
+   //-->
+  </style>
+
+ </head>
+ <body onload="launch()">
+
+  <h1>
+   Dali Clock<br>
+   The Javascript version
+   <div style="font-size: 10pt; font-weight: normal; padding-top: 4px">
+    Copyright &copy; 2009 Jamie Zawinski
+   </div>
+  </h1>
+
+  <div class="prefs">
+
+   <h2>Settings</h2>
+   <p>
+
+   <form name="prefs_form">
+
+    <input type=hidden name="width"  value=318>
+    <input type=hidden name="height" value=420>
+
+    <table cellpadding=4 cellspacing=0 border=0 align=center>
+     <tr>
+      <td align=left valign=top nowrap>
+       <b>Date display:</b>
+      </td>
+      <td align=left valign=top nowrap>
+       <select name="date_mode" onblur="upd()" onchange="upd()">
+        <option value="DDMMYY">		Day/Month/Year	</option>
+        <option value="MMDDYY" selected>	Month/Day/Year	</option>
+        <option value="YYMMDD">		Year/Month/Day	</option>
+       </select>
+
+      </td>
+     </tr>
+     <tr>
+      <td align=left valign=top nowrap>
+       <b>Time display:</b>
+      </td>
+      <td align=left valign=top nowrap>
+       <select name="time_mode" onblur="upd()" onchange="upd()">
+        <option value="HHMMSS" selected>     Hour, Min &amp; Sec </option>
+        <option value="HHMM">                Hour &amp; Min      </option>
+        <option value="SS">                  Seconds only        </option>
+       </select>
+      </td>
+     </tr>
+     <tr>
+      <td align=left valign=top nowrap>
+      </td>
+      <td align=left valign=top nowrap>
+       <select name="twelve_p" onblur="upd()" onchange="upd()">
+        <option value="true" selected>	12 hour time	</option>
+        <option value="false">               24 hour time    </option>
+       </select>
+      </td>
+     </tr>
+     <tr>
+      <td align=left valign=top nowrap>
+       <b>Target frame rate:</b>
+      </td>
+      <td align=left valign=top nowrap>
+       <select name="fps" onblur="upd()" onchange="upd()">
+        <option value=1>             1 fps   </option>
+        <option value=2>             2 fps   </option>
+        <option value=3>             3 fps   </option>
+        <option value=4>             4 fps   </option>
+        <option value=5>             5 fps   </option>
+        <option value=6>             6 fps   </option>
+        <option value=7>             7 fps   </option>
+        <option value=8>             8 fps   </option>
+        <option value=9>             9 fps   </option>
+        <option value=10 selected>   10 fps  </option>
+        <option value=11>            11 fps  </option>
+        <option value=12>            12 fps  </option>
+        <option value=13>            13 fps  </option>
+        <option value=14>            14 fps  </option>
+        <option value=15>            15 fps  </option>
+        <option value=16>            16 fps  </option>
+        <option value=17>            17 fps  </option>
+        <option value=18>            18 fps  </option>
+        <option value=19>            19 fps  </option>
+        <option value=20>            20 fps  </option>
+        <option value=21>            21 fps  </option>
+        <option value=22>            22 fps  </option>
+        <option value=23>            23 fps  </option>
+        <option value=24>            24 fps  </option>
+        <option value=25>            25 fps  </option>
+        <option value=26>            26 fps  </option>
+        <option value=27>            27 fps  </option>
+        <option value=28>            28 fps  </option>
+        <option value=29>            29 fps  </option>
+        <option value=30>            30 fps  </option>
+       </select>
+       <br>
+      </td>
+     </tr>
+     <tr>
+      <td align=left valign=top nowrap>
+       <b>Color cycle speed:</b>
+      </td>
+      <td align=left valign=top nowrap>
+       <select name="cps" onblur="upd()" onchange="upd()">
+        <option value=0>             None    </option>
+        <option value=1>             1 fps   </option>
+        <option value=2>             2 fps   </option>
+        <option value=3>             3 fps   </option>
+        <option value=4>             4 fps   </option>
+        <option value=5>             5 fps   </option>
+        <option value=6>             6 fps   </option>
+        <option value=7>             7 fps   </option>
+        <option value=8>             8 fps   </option>
+        <option value=9>             9 fps   </option>
+        <option value=10>            10 fps  </option>
+        <option value=11>            11 fps  </option>
+        <option value=12 selected>   12 fps  </option>
+        <option value=13>            13 fps  </option>
+        <option value=14>            14 fps  </option>
+        <option value=15>            15 fps  </option>
+        <option value=16>            16 fps  </option>
+        <option value=17>            17 fps  </option>
+        <option value=18>            18 fps  </option>
+        <option value=19>            19 fps  </option>
+        <option value=20>            20 fps  </option>
+        <option value=21>            21 fps  </option>
+        <option value=22>            22 fps  </option>
+        <option value=23>            23 fps  </option>
+        <option value=24>            24 fps  </option>
+        <option value=25>            25 fps  </option>
+        <option value=26>            26 fps  </option>
+        <option value=27>            27 fps  </option>
+        <option value=28>            28 fps  </option>
+        <option value=29>            29 fps  </option>
+        <option value=30>            30 fps  </option>
+       </select>
+      </td>
+     </tr>
+     <tr>
+      <td align=left valign=top nowrap>
+       <b>Orientation:</b>
+      </td>
+      <td align=left valign=top nowrap>
+       <select name="orientation" onblur="upd()" onchange="upd()">
+        <option value="up" selected> Up      </option>
+        <option value="left">        Left    </option>
+        <option value="right">       Right   </option>
+        <option value="down">        Down    </option>
+       </select>
+      </td>
+     </tr>
+     <tr>
+      <td align=left valign=top nowrap>
+       <b>Anti-aliasing:</b>
+      </td>
+      <td align=left valign=top nowrap>
+       <select name="scaling" onblur="upd()" onchange="upd()">
+        <option value="true">                Yes     </option>
+        <option value="false" selected>      No      </option>
+       </select>
+      </td>
+     </tr>
+    </table>
+   </form>
+
+   <p>
+   <div id="log" style="margin-left:2em; white-space:normal">
+    &nbsp;</div>
+  </div>
+
+  <div class="clockbox" id="clockbg" onclick="show_date()">
+   <canvas id="canvas" width=1 height=1 onclick="show_date()">
+    <div style="align:center; margin: 13em 5em 0 4em;">
+     Sorry, this won't work because your browser does not support the
+      <tt>&lt;canvas&gt;</tt> tag.
+    </div>
+   </canvas>
+  </div>
+
+ </body>
+</html>
